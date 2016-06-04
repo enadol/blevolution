@@ -9,13 +9,13 @@
   <meta name="twitter:title" content="Evolución del torneo 2015-2016 en la Bundesliga">
   <meta name="twitter:image:src" content="http://romsson.github.io/dragit/img/nations.png"/>
   <meta name="twitter:domain" content="http://romsson.github.io/dragit/"> -->
-  <title>Evolución del torneo 2015-2016 en la Bundesliga</title>
-  <meta name="description" content="Drag & Drop World Countries (if you can)">
+  <title>Bundesliga - The road to the championship 2015-2016</title>
+  <meta name="description" content="Bundesliga Evolution 2015-2015">
   <link href="../src/dragit.css" rel="stylesheet"/>
-  <script src="../lib/d3.v3.js"></script>
+  <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
   <script src="../src/dragit.js"></script>
 </head>
-<title>Evolución del torneo 2015-2016 en la Bundesliga</title>
+<title>Bundesliga - The road to the championship 2015-2016</title>
 <style>
 
 body {
@@ -97,15 +97,19 @@ path.lineTrajectory {
   stroke-width: 4;
 }
 
+
+
+
+
 </style>
 
-<h1>Evolución del torneo 2015-2016 en la Bundesliga</h1>
+<h1>Bundesliga - The road to the championship 2015-2016</h1>
 
-<i>Use your mouse to click and drag countries (represented as circles) to explore +200 years of life expectancy and income indicators.</i></p>
+<i>Use your mouse to click and drag teams (represented as circles) to explore point accumulation related to goals (for).</i></p>
 
 <div id="chart" style="margin:0px"></div>
 <span id="min-time">1</span> 
-<input type="range" name="points" min="0" max="208" step="1" value="0" id="slider-time" style="width:900px">
+<input type="range" name="points" min="0" max="33" step="1" value="0" id="slider-time" style="width:900px">
 <span id="max-time">34</span>
 <br>
 <!-- <p>
@@ -119,7 +123,7 @@ Re-Recreation using <a href="http://romsson.github.io/dragit/">dragit.js</a> by 
 </div></p> -->
 
 <!-- Place this tag in your head or just before your close body tag. -->
-<!-- <script type="text/javascript" src="https://apis.google.com/js/platform.js"></script> -->
+<script type="text/javascript" src="https://apis.google.com/js/platform.js"></script>
 
 <!-- Place this tag where you want the share button to render. -->
 <!-- <div class="g-plus" data-action="share" data-annotation="bubble" data-href="http://romsson.github.io/dragit/example/nations.html"></div> -->
@@ -142,9 +146,9 @@ Re-Recreation using <a href="http://romsson.github.io/dragit/">dragit.js</a> by 
 
 // Various accessors that specify the four dimensions of data to visualize.
 function x(d) { return d.puntos; }
-function y(d) { return d.ganados; }
-function radius(d) { return d.perdidos; }
-function color(d) { return d.empatados; }
+function y(d) { return d.gf; }
+function radius(d) { return d.puntos; }
+function color(d) { return d.name; }
 function key(d) { return d.name; }
 
 // Chart dimensions.
@@ -153,13 +157,14 @@ var margin = {top: 19.5, right: 19.5, bottom: 19.5, left: 39.5},
     height = 500 - margin.top - margin.bottom;
 
 // Various scales. These domains make assumptions of data, naturally.
-var xScale = d3.scale.log().domain([300, 1e5]).range([0, width]),
-    yScale = d3.scale.linear().domain([10, 85]).range([height, 0]),
-    radiusScale = d3.scale.sqrt().domain([0, 5e8]).range([0, 40]),
-    colorScale = d3.scale.category10();
+var xScale = d3.scale.log().domain([10,1e5]).range([0,width]),
+    yScale = d3.scale.linear().domain([0,90]).range([height, 0]),
+    radiusScale = d3.scale.sqrt().domain([0, 3]).range([0, 3]),
+    colorScale = d3.scale.category20(),
+    myScale=d3.scale.linear().domain([1,90]).range([0,width]);
 
 // The x & y axes.
-var xAxis = d3.svg.axis().orient("bottom").scale(xScale).ticks(12, d3.format(",d")),
+var xAxis = d3.svg.axis().orient("bottom").scale(myScale).ticks(34),
     yAxis = d3.svg.axis().scale(yScale).orient("left");
 
 // Create the SVG container and set the origin.
@@ -187,7 +192,7 @@ svg.append("text")
     .attr("text-anchor", "end")
     .attr("x", width)
     .attr("y", height - 6)
-    .text("income per capita, inflation-adjusted (dollars)");
+    .text("points");
 
 // Add a y-axis label.
 svg.append("text")
@@ -196,7 +201,7 @@ svg.append("text")
     .attr("y", 6)
     .attr("dy", ".75em")
     .attr("transform", "rotate(-90)")
-    .text("life expectancy (years)");
+    .text("goals for");
 
 // Add the year label; the value is set on transition.
 var label = svg.append("text")
@@ -231,7 +236,7 @@ d3.json("../data/tablaevolution.json", function(equipos) {
       .attr("class", "dot")
       .style("fill", function(d) { return colorScale(color(d)); })
       .call(position)
-      .on("mousedow", function(d, i) {
+      .on("mousedown", function(d, i) {
 
       })
       .on("mouseup", function(d, i) {
@@ -244,7 +249,7 @@ d3.json("../data/tablaevolution.json", function(equipos) {
 
       })
       .on("mouseenter", function(d, i) {
-        clear_demo();
+        //clear_demo();
         if(dragit.statemachine.current_state == "idle") {
           dragit.trajectory.display(d, i)
           dragit.utils.animateTrajectory(dragit.trajectory.display(d, i), dragit.time.current, 1000)
@@ -276,7 +281,7 @@ d3.json("../data/tablaevolution.json", function(equipos) {
 
   // Positions the dots based on data.
   function position(dot) {
-    dot.attr("cx", function(d) { return xScale(x(d)); })
+    dot.attr("cx", function(d) { return myScale(x(d)); })
        .attr("cy", function(d) { return yScale(y(d)); })
        .attr("r", function(d) { return radiusScale(radius(d)); });
   }
@@ -301,7 +306,10 @@ d3.json("../data/tablaevolution.json", function(equipos) {
         puntos: interpolateValues(d.puntos, jornada),
         ganados: interpolateValues(d.ganados, jornada),
         perdidos: interpolateValues(d.perdidos, jornada),
-        empatados: interpolateValues(d.empatados, jornada)
+        empatados: interpolateValues(d.empatados, jornada),
+        gc: interpolateValues(d.gc, jornada),
+        gf: interpolateValues(d.gf, jornada),
+        dif: interpolateValues(d.dif, jornada)
       };
     });
   }
@@ -330,13 +338,13 @@ d3.json("../data/tablaevolution.json", function(equipos) {
 
     dragit.init(".gRoot");
 
-    dragit.time = {min:1, max:34, step:1, current:1}
-    dragit.data = d3.range(nations.length).map(function() { return Array(); })
+    dragit.time = {min:1, max:34, step:1, current:0}
+    dragit.data = d3.range(equipos.length).map(function() { return Array(); })
 
     for(var jornada = 1; jornada<34; jornada++) {
 
       interpolateData(jornada).filter(function(d, i) { 
-        dragit.data[i][jornada-dragit.time.min] = [xScale(x(d)), yScale(y(d))];
+        dragit.data[i][jornada-dragit.time.min] = [myScale(x(d)), yScale(y(d))];
 
       })
     }
@@ -348,7 +356,7 @@ d3.json("../data/tablaevolution.json", function(equipos) {
     d3.select("#slider-time")
       .on("mousemove", function() { 
         update(parseInt(this.value), 500);
-        clear_demo();
+        //clear_demo();
       })
 
     var end_effect = function() {
@@ -359,16 +367,16 @@ d3.json("../data/tablaevolution.json", function(equipos) {
     dragit.evt.register("dragend", end_effect)
   }
 
-function clear_demo() {
-  if(first_time) {
-     svg.transition().duration(0);
-    first_time = false;
-    window.clearInterval(demo_interval);
-    countrylabel.text("");
-    dragit.trajectory.removeAll();
-    d3.selectAll(".dot").style("opacity", 1)
-  }
-}
+// function clear_demo() {
+//   if(first_time) {
+//      svg.transition().duration(0);
+//     first_time = false;
+//     window.clearInterval(demo_interval);
+//     countrylabel.text("");
+//     dragit.trajectory.removeAll();
+//     d3.selectAll(".dot").style("opacity", 1)
+//   }
+// }
 
 // function play_demo() {
 
